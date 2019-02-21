@@ -2,25 +2,11 @@
 from math import *
 from random import randint
 import paho.mqtt.publish as publish
-import paho.mqtt.client as mqtt
 import RPi.GPIO as GPIO
 import time
 from datetime import datetime
-#import socket
 
-client = mqtt.Client()
 
-#Defining Constants
-rand = 0
-res = 1
-V0 = 12
-I0 = 20
-freq = 0
-Irms = 0
-
-#Get ip address
-hostname = socket.gethostname()
-ipAddr = socket.gethostbyname(hostname)
 
 def DCVoltage(): #Voltage coming from the PLC
     Vc = GPIO.input(11)
@@ -83,8 +69,23 @@ def motorEncoder():
     freq = pulses/10
     return freq
 
+def changeRes(res):
+    I = 5
+    V = I*res
+    return V
+
 if __name__ == "__main__":
-    hostip = "192.168.137.185"
+    #Defining Constants
+    rand = 0
+#    res = 1
+    V0 = 12
+    I0 = 20
+    freq = 0
+    Irms = 0
+
+    #Get ip address
+    hostip = "192.168.137.247"
+    
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(11, GPIO.IN) #GPIO17 Receiving the 5 Vc from the PLC
@@ -98,6 +99,7 @@ if __name__ == "__main__":
             publish.single("Motor/temperature", temperature(Irms), hostname=hostip)
             publish.single("Motor/vibration", vibration(res), hostname=hostip)
             publish.multiple(current(freq, res), hostname=hostip)
+            publish.single("Motor/OhmsLaw", changeRes(res), hostname=hostip)
             time.sleep(0.1)
     except KeyboardInterrupt:
         print ("Ctrl C - Ending Program")
