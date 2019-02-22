@@ -14,21 +14,17 @@ def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     
     if msg.topic == "Motor/resistance":
-        int res = msg.payload
+        res = int(msg.payload)
         client.publish("Motor/changeRes", res)
         freq = 4
-        #current(freq, res)
-        #changeRes(res)
-#        print(mqttPublish.changeRes(res))
-        client.publish("Motor/OhmsLaw", mqttPublish.changeRes(res))
-        
+        client.publish("Motor/OhmsLaw", mqttPublish.changeRes(res))        
 def on_disconnect(client, userdata, flags, rc=0):
     print("Disconnected result code "+str(rc))
             
     
 
 if __name__ == "__main__":
-    hostip = "192.168.137.247"
+    hostip = "192.168.137.197"
     #Create an MQTT client and attach our routines to it
     client = mqtt.Client()
     client.on_connect = on_connect
