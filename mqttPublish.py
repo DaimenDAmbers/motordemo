@@ -34,13 +34,14 @@ def voltage(freq, res): #3 phase voltage from
 
 def current(freq, res): #input the frequency from frequency function
     resConst = 5
+    V0 = 100
     d = datetime.now()
     uSec = d.microsecond
     secs = d.second
     mSec = uSec / 1000.0
     global Irms
     Irms = (V0/(resConst*res))/(sqrt(2))
-    I1 = (V0/(resConst*res))*sin(2*pi*freq*mSec)
+    I1 = float((V0/(resConst*res))*sin(2*pi*freq*mSec))
     I2 = (V0/(resConst*res))*sin(2*pi*freq*mSec + pi*2/3)
     I3 = (V0/(resConst*res))*sin(2*pi*freq*mSec + pi*4/3)
     msgs=[{ #Message that will publish the three voltage values on the same graph
@@ -77,14 +78,14 @@ def changeRes(res):
 if __name__ == "__main__":
     #Defining Constants
     rand = 0
-#    res = 1
+    res = 1
     V0 = 12
     I0 = 20
     freq = 0
     Irms = 0
 
     #Get ip address
-    hostip = "192.168.137.247"
+    hostip = "192.168.137.197"
     
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
