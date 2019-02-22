@@ -12,43 +12,22 @@ def DCVoltage(): #Voltage coming from the PLC
     Vc = GPIO.input(11)
     if Vc == 1:
         status = "On"
+        V0 = 5
     else:
         status = "Off"
-    return status
+        V0 = 0
+    return [status, V0]
 
-def voltage(freq, res): #3 phase voltage from
-    resConst = 5
-    d = datetime.now()
-    uSec = d.microsecond
-    mSec = uSec / 1000.0
-    Vrms = (I0*(resConst*res))/(sqrt(2))
-    V1 = (I0*(resConst*res))*sin(2*pi*freq*mSec)
-    V2 = (I0*(resConst*res))*sin(2*pi*freq*mSec + pi*2/3)
-    V3 = (I0*(resConst*res))*sin(2*pi*freq*mSec + pi*4/3)
-    msgs=[{ #Message that will publish the three voltage values on the same graph
-    "topic":"Motor/voltage1"
-    ,"payload": V1}
-    ,("Motor/voltage2", V2)
-    ,("Motor/voltage3", V3)]
-    return msgs
 
 def current(freq, res): #input the frequency from frequency function
     resConst = 5
-    V0 = 100
     d = datetime.now()
     uSec = d.microsecond
     secs = d.second
     mSec = uSec / 1000.0
-    Irms = (V0/(resConst*res))/(sqrt(2))
+    global Irms
     I1 = ((V0/(resConst*res))*sin(2*pi*freq*mSec))
-    I2 = (V0/(resConst*res))*sin(2*pi*freq*mSec + pi*2/3)
-    I3 = (V0/(resConst*res))*sin(2*pi*freq*mSec + pi*4/3)
-#    msgs=[{ #Message that will publish the three voltage values on the same graph
-#        "topic":"Motor/current1"
-#        ,"payload": I1}
-#        ,("Motor/current2", I2)
-#        ,("Motor/current3", I3)
-#        ,("Motor/rmsCurrent", Irms)]
+    Irms = I1/(sqrt(2))
     return Irms
 
 
@@ -70,22 +49,17 @@ def motorEncoder():
     freq = pulses/10
     return freq
 
-def changeRes(res):
-    I = 5
-    V = I*res
-    return V
 
 if __name__ == "__main__":
-    #Defining Constants
-    rand = 0
+    #Defining Global Constants and Variables
     res = 1
-    V0 = 12
-    I0 = 20
+    V0 = 100 #Amplified Voltage for visual purposes
+    I0 = 20 #
     freq = 0
     Irms = 0
 
     #Get ip address
-    hostip = "192.168.137.197"
+    hostip = "10.0.0.12"
     
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
@@ -94,13 +68,13 @@ if __name__ == "__main__":
     try:
         print("Running...")
         motorEncoder()
+        status, DCVolts = DCVoltage()
         while True: #Publish single and multiple messages to these topics
-            publish.single("Motor/dcvoltage", DCVoltage(), hostname=hostip)
-            publish.multiple(voltage(freq, res), hostname=hostip)
+            publish.single("Motor/dcvoltage", DCVolts, hostname=hostip)
+            publish.single("Motor/status", status, hostname=hostip)
             publish.single("Motor/temperature", temperature(Irms), hostname=hostip)
             publish.single("Motor/vibration", vibration(res), hostname=hostip)
-            publish.multiple(current(freq, res), hostname=hostip)
-            publish.single("Motor/OhmsLaw", changeRes(res), hostname=hostip)
+            publish.single("Motor/rmsCurrent", current(freq, res), hostname=hostip)
             time.sleep(0.1)
     except KeyboardInterrupt:
         print ("Ctrl C - Ending Program")
