@@ -1,6 +1,8 @@
 #MQTT Client
 import paho.mqtt.client as mqtt
 import mqttPublish
+freq = 4
+res = 1
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -12,12 +14,13 @@ def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     
     if msg.topic == "Motor/resistance":
+        global res
         res = int(msg.payload)
         client.publish("Motor/changeRes", res)
         freq = 4
-#        mqttPublish.current(freq, res)
-        print(mqttPublish.current(freq, res))
-        client.publish("Motor/OhmsLaw", mqttPublish.changeRes(res))        
+        client.publish("Motor/OhmsLaw", mqttPublish.changeRes(res))
+        client.publish("Motor/rmsCurrent", mqttPublish.current(freq, res))
+        variType = mqttPublish.current(freq, res)
 def on_disconnect(client, userdata, flags, rc=0):
     print("Disconnected result code "+str(rc))
             
@@ -33,7 +36,9 @@ if __name__ == "__main__":
 
     client.connect(hostip, 1883, 60)
     try:
+#            client.loop()
         client.loop_forever()
+#            client.publish("Motor/current1", str(mqttPublish.current(freq,res)))
     except KeyboardInterrupt:
         client.disconnect()
         client.loop_stop()

@@ -39,17 +39,17 @@ def current(freq, res): #input the frequency from frequency function
     uSec = d.microsecond
     secs = d.second
     mSec = uSec / 1000.0
-    global Irms
     Irms = (V0/(resConst*res))/(sqrt(2))
-    I1 = float((V0/(resConst*res))*sin(2*pi*freq*mSec))
+    I1 = ((V0/(resConst*res))*sin(2*pi*freq*mSec))
     I2 = (V0/(resConst*res))*sin(2*pi*freq*mSec + pi*2/3)
     I3 = (V0/(resConst*res))*sin(2*pi*freq*mSec + pi*4/3)
-    msgs=[{ #Message that will publish the three voltage values on the same graph
-        "topic":"Motor/current1"
-        ,"payload": I1}
-        ,("Motor/current2", I2)
-        ,("Motor/current3", I3)]
-    return msgs
+#    msgs=[{ #Message that will publish the three voltage values on the same graph
+#        "topic":"Motor/current1"
+#        ,"payload": I1}
+#        ,("Motor/current2", I2)
+#        ,("Motor/current3", I3)
+#        ,("Motor/rmsCurrent", Irms)]
+    return Irms
 
 
 def temperature(Irms): #constant temperature
