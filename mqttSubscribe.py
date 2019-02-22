@@ -59,4 +59,6 @@ if __name__ == "__main__":
         client.disconnect()
         client.loop_stop()
         print("Ctrl+C Exiting program")
+    finally:
+        GPIO.cleanup()
     

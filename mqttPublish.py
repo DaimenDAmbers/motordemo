@@ -21,6 +21,7 @@ def DCVoltage(): #Voltage coming from the PLC
 
 def current(freq, res): #input the frequency from frequency function
     resConst = 5
+    V0 = 100
     d = datetime.now()
     uSec = d.microsecond
     secs = d.second
