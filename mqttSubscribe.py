@@ -9,6 +9,8 @@ def on_connect(client, userdata, flags, rc):
 
     #Subscribing in on_connect() - if we lose the connection and reconnect then subscription will be renewed
     client.subscribe("Motor/#") #Subscribes to the Voltage, Current, Temp, Resistance and Vibration Messages
+    global res
+    res = 1
     
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
@@ -20,14 +22,13 @@ def on_message(client, userdata, msg):
     if msg.topic == "Motor/resistance":
         global res
         res = int(msg.payload)
-        client.publish("Motor/changeRes", res)
         client.publish("Motor/rmsCurrent", mqttPublish.current(freq, res))
-        #Will need vibration function in this if statement as well.
         client.publish("Motor/vibration", mqttPublish.vibration(res))
         client.publish("Motor/temperature", mqttPublish.temperature(res))
         
-    if msg.topic == "Motor/rmsCurrent":
-        client.publish("Motor/temperature", mqttPublish.temperature(Irms))
+#    if msg.topic == "Motor/rmsCurrent":
+#        client.publish("Motor/temperature", mqttPublish.temperature(Irms))
+        
 def on_disconnect(client, userdata, flags, rc=0):
     print("Disconnected result code "+str(rc))
             
@@ -64,10 +65,9 @@ if __name__ == "__main__":
             client.publish("Motor/temperature", temperature)
             client.publish("Motor/rmsCurrent", Irms)
             
-            client.loop()
-            mqttPublish.time.sleep(1)
-#        client.loop_forever()
-#            client.publish("Motor/current1", str(mqttPublish.current(freq,res)))
+            print("The test resistance is",res)
+            client.loop(.1)
+
     except KeyboardInterrupt:
         client.disconnect()
         client.loop_stop()

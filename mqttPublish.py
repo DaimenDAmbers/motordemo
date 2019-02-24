@@ -28,7 +28,7 @@ def current(freq, res): #input the frequency from frequency function
     mSec = uSec / 1000.0
     global Irms
     I1 = ((V0/(resConst*res))*sin(2*pi*freq*mSec))
-    Irms = I1/(sqrt(2))
+    Irms = (V0/(resConst*res))/(sqrt(2))
     return Irms
 
 
@@ -37,8 +37,7 @@ def temperature(Irms): #constant temperature
     return temp
 
 def vibration(res): #constant vibration
-    resConst = 5
-    vibr = randint(1,resConst*res)
+    vibr = randint(1,res)
     return vibr
 
 def motorEncoder():
