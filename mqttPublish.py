@@ -60,7 +60,7 @@ if __name__ == "__main__":
     Irms = 0
 
     #Get ip address
-    hostip = "10.0.0.12"
+    hostip = "10.0.0.8"
     
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
@@ -69,13 +69,15 @@ if __name__ == "__main__":
     try:
         print("Running...")
         motorEncoder()
-        status, DCVolts = DCVoltage()
+        
         while True: #Publish single and multiple messages to these topics
+            status, DCVolts = DCVoltage()
             publish.single("Motor/dcvoltage", DCVolts, hostname=hostip)
             publish.single("Motor/status", status, hostname=hostip)
             publish.single("Motor/temperature", temperature(Irms), hostname=hostip)
             publish.single("Motor/vibration", vibration(res), hostname=hostip)
             publish.single("Motor/rmsCurrent", current(freq, res), hostname=hostip)
+            print(DCVolts)
             time.sleep(0.1)
     except KeyboardInterrupt:
         print ("Ctrl C - Ending Program")
