@@ -5,6 +5,7 @@ import RPi.GPIO as GPIO
 import time
 from datetime import datetime
 import numpy
+import paho.mqtt.publish as publish
 
 
 

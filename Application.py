@@ -3,7 +3,6 @@ import paho.mqtt.client as mqtt
 import Functions
 import RPi.GPIO as GPIO
 import myOPCUA
-import paho.mqtt.publish as publish
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -54,7 +53,7 @@ if __name__ == "__main__": #Script for frunning the main application
     status = Functions.inputVoltage(vCtrl)
 
     #Create an OPCUA server
-    myOPCUA.createOPCUA()
+    Temp, Vibr, Curr = myOPCUA.createOPCUA()
 
     #Create an MQTT client and attach our routines to it
     client = mqtt.Client()
@@ -79,7 +78,7 @@ if __name__ == "__main__": #Script for frunning the main application
             client.publish("Motor/temperature", Temperature)
             
             #OPCUA publish
-            
+            myOPCUA.publishOPCUA(load, vCtrl, freq, Irms, Temp, Vibr, Curr)
             Functions.time.sleep(0.5)
 
     except KeyboardInterrupt:
