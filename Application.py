@@ -21,9 +21,6 @@ def on_message(client, userdata, msg):
         client.publish("Motor/ctrlvoltage", vCtrl)
         global freq
         freq = Functions.motorEncoder(vCtrl, load)
-#        client.publish("Motor/rmsCurrent", Functions.current(freq, load, vCtrl))
-#        client.publish("Motorl/vibration", Functions.vibration(load, vCtrl))
-#        client.publish("Motor/temperature", Functions.temperature(Irms))
 
     if msg.topic == "PLC/load": #When the resistnace value changes, the new resistance is published to the functions
         global load
@@ -31,30 +28,29 @@ def on_message(client, userdata, msg):
         client.publish("Motor/load", load)
         global freq
         freq = Functions.motorEncoder(vCtrl, load)
-#        client.publish("Motor/rmsCurrent", Functions.current(freq, load, vCtrl))
-#        client.publish("Motor/vibration", Functions.vibration(load, vCtrl))
-#        client.publish("Motor/temperature", Functions.temperature(Irms))
-
-#    if msg.topic == "Motor/rmsCurrent":
-#        client.publish("Motor/temperature", Functions.temperature(Irms))
+        
+    if msg.topic == "PLC/status":
+        client.pulish("Motor/status", status)
+        
 
 def on_disconnect(client, userdata, flags, rc=0):
     print("Disconnected result code "+str(rc))
     client.loop_stop()
 
 
-
-if __name__ == "__main__":
+if __name__ == "__main__": #Script for frunning the main application
     hostip = "192.168.137.34"
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(11, GPIO.IN) #GPIO17 Receiving the 5 Vc from the PLC
-    GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation
+    GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation / Motor Encoder
 
     #Initalize a constants
-    vCtrl = 0
+    vCtrl = 0 #Still need to be globalized but vCtrl is retained from the dashboard
     load = 0
-    freq = Functions.motorEncoder(vCtrl, load)
+    freq = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
+    status = Functions.inputVoltage()
+    counter = 0 #Counter for checking if the PLC is connected to the Pi
 
     #Create an MQTT client and attach our routines to it
     client = mqtt.Client()
@@ -65,10 +61,20 @@ if __name__ == "__main__":
     client.connect(hostip, 1883, 60)
     try:
         while True:
-            while freq == 0:
+#            while status == "Off": #Determines if the PLC is on or not
+#                counter += 1
+#                if counter == 1:
+#                    print("Please connect PLC")
+#                    client.publish("Motor/status", status)
+#                if status == "On":
+#                    client.publish("Motor/status", status)
+#                    break
+                
+            while freq == 0: #Determines if the freq is equal to 0
                 client.loop()
                 if freq != 0:
                     break
+                
             #Making the functions output to varialbes
             Irms = Functions.current(freq, load, vCtrl)
             Vibration = Functions.vibration(load, vCtrl)
@@ -80,11 +86,15 @@ if __name__ == "__main__":
             client.publish("Motor/temperature", Temperature)
             print(vCtrl, load)
 
-            client.loop(0.1)
+            client.loop(5)
             Functions.time.sleep(1)
+            
+#            if status == "Off": #If the PLC is disconnected, turn off the program
+#                print("PLC disconnected, turning off program...")
+#                break
 
     except KeyboardInterrupt:
-        client.disconnect()
         print("Ctrl+C Exiting program")
     finally:
+        client.disconnect()
         GPIO.cleanup()

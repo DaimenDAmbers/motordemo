@@ -10,8 +10,8 @@ import numpy
 
 
 def inputVoltage(): #This determines if the Rpi is receiving an input from the PLC
-    Vc = GPIO.input(11)
-    if Vc == 1:
+    Vin = GPIO.input(11)
+    if Vin == 1:
         status = "On"
     else:
         status = "Off"
