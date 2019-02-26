@@ -19,16 +19,16 @@ def on_message(client, userdata, msg):
     if msg.topic == "PLC/ctrlvoltage":
         global vCtrl
         vCtrl = int(msg.payload)
-        client.publish("Motor/ctrlvoltage", vCtrl)
         global freq
-        freq = Functions.motorEncoder(vCtrl, load)
+        global rpm
+        freq, rpm = Functions.motorEncoder(vCtrl, load)
 
     if msg.topic == "PLC/load": #When the resistnace value changes, the new resistance is published to the functions
         global load
         load = int(msg.payload)
-        client.publish("Motor/load", load)
         global freq
-        freq = Functions.motorEncoder(vCtrl, load)
+        global rpm
+        freq, rpm = Functions.motorEncoder(vCtrl, load)
         
     if msg.topic == "PLC/status":
         client.pulish("Motor/status", status)
@@ -37,6 +37,9 @@ def on_message(client, userdata, msg):
 def on_disconnect(client, userdata, flags, rc=0):
     print("Disconnected result code "+str(rc))
     client.loop_stop()
+    myOPCUA.disconnectOPCUA()
+    GPIO.cleanup()
+    print("Shutting down servers...")
 
 
 if __name__ == "__main__": #Script for frunning the main application
@@ -49,7 +52,7 @@ if __name__ == "__main__": #Script for frunning the main application
     #Initalize a constants
     vCtrl = 0 #Still need to be globalized but vCtrl is retained from the dashboard
     load = 0
-    freq = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
+    freq, rpm = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
     status = Functions.inputVoltage(vCtrl)
 
     #Create an OPCUA server
@@ -76,6 +79,7 @@ if __name__ == "__main__": #Script for frunning the main application
             client.publish("Motor/rmsCurrent", Irms)
             client.publish("Motor/vibration", Vibration)
             client.publish("Motor/temperature", Temperature)
+            client.publish("Motor/rpms", rpm)
             
             #OPCUA publish
             myOPCUA.publishOPCUA(load, vCtrl, freq, Irms, Temp, Vibr, Curr)
@@ -85,4 +89,4 @@ if __name__ == "__main__": #Script for frunning the main application
         print("Ctrl+C Exiting program")
     finally:
         client.disconnect()
-        GPIO.cleanup()
+        

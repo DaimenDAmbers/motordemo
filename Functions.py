@@ -37,19 +37,20 @@ def temperature(Irms): #constant temperature
     return temp
 
 def vibration(load, vCtrl): #constant vibration
-    vibr = numpy.random.uniform(1.0,2.0) * int(0.1*(load + vCtrl)+1)
+    vibr = numpy.random.uniform(-0.5,2.5) * (0.1*(load + vCtrl)+1) #Should be a float
     return vibr
 
 def motorEncoder(vCtrl, load):
     global p12
-    global freq
-    if (load == 0 and vCtrl == 0):
+    if vCtrl == 0:
         freq = 0
+        rpm = 0
     else:
         freq = (8 * vCtrl)-(1.5*load)
         p12 = GPIO.PWM(12, freq) #Blink LED on GPIO 18, pin 12 with f=40Hz
         p12.start(50) #50% duty cycle
-    return freq
+        rpm = (freq*60)/10
+    return [freq, rpm]
 
 
 if __name__ == "__main__":
