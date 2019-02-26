@@ -1,4 +1,4 @@
-#MQTT Publish Script
+#Functions for the python application
 from math import *
 from random import randint
 import paho.mqtt.publish as publish
@@ -15,7 +15,7 @@ def inputVoltage(): #This determines if the Rpi is receiving an input from the P
         status = "On"
     else:
         status = "Off"
-    return status        
+    return status
 
 
 def current(freq, load, vCtrl): #input the frequency, load and vCtrl from outside sources
@@ -40,13 +40,15 @@ def vibration(load, vCtrl): #constant vibration
     vibr = numpy.random.uniform(1.0,2.0) * int(0.1*(load + vCtrl)+1)
     return vibr
 
-def motorEncoder(vCtrl):
+def motorEncoder(vCtrl, load):
     global p12
     global freq
-    pulses = 8 * vCtrl
-    p12 = GPIO.PWM(12, pulses) #Blink LED on GPIO 18, pin 12 with f=40Hz
-    p12.start(50) #50% duty cycle
-    freq = pulses/10
+    if load and vCtrl == 0:
+        freq = 0
+    else:
+        freq = (8 * vCtrl)-(1.5*load)
+        p12 = GPIO.PWM(12, freq) #Blink LED on GPIO 18, pin 12 with f=40Hz
+        p12.start(50) #50% duty cycle
     return freq
 
 
@@ -54,22 +56,22 @@ if __name__ == "__main__":
 
     #Get ip address
     hostip = "192.168.137.34"
-    
+
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(11, GPIO.IN) #GPIO17 Receiving the 5 Vc from the PLC
     GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation
-    
+
     #    #Defining Global Constants and Variables
     load = 10
     vCtrl = 5 #Amplified Voltage for visual purposes
-    freq = motorEncoder(vCtrl)
+    freq = motorEncoder(vCtrl, load)
     try:
         print("Running...")
         print(freq)
         while True: #Publish single and multiple messages to these topics
             status = inputVoltage()
-            publish.single("Motor/status", status, hostname=hostip)            
+            publish.single("Motor/status", status, hostname=hostip)
             publish.single("Motor/vibration", vibration(load, vCtrl), hostname=hostip)
             publish.single("Motor/rmsCurrent", current(freq, load, vCtrl), hostname=hostip)
             publish.single("Motor/temperature", temperature(Irms), hostname=hostip)
