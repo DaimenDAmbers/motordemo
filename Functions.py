@@ -19,16 +19,16 @@ def inputVoltage(): #This determines if the Rpi is receiving an input from the P
 
 
 def current(freq, load, vCtrl): #input the frequency, load and vCtrl from outside sources
-    loadConst = 1.5
+    loadConst = 4
+    Iweight = 3
     d = datetime.now()
     uSec = d.microsecond
     mSec = uSec / 1000.0
     global Irms
-    I1 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec))
-    I2 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(2/3))
-    I3 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(4/3))
-    Irms = (vCtrl/(loadConst*load))/(sqrt(2))
-#    print(Irms)
+#    I1 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec))
+#    I2 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(2/3))
+#    I3 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(4/3))
+    Irms = ((vCtrl*loadConst) + (Iweight*load))/(sqrt(2))
     return Irms
 
 
@@ -43,7 +43,7 @@ def vibration(load, vCtrl): #constant vibration
 def motorEncoder(vCtrl, load):
     global p12
     global freq
-    if load and vCtrl == 0:
+    if (load == 0 and vCtrl == 0):
         freq = 0
     else:
         freq = (8 * vCtrl)-(1.5*load)

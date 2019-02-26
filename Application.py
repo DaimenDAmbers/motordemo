@@ -9,26 +9,31 @@ def on_connect(client, userdata, flags, rc):
     #Subscribing in on_connect() - if we lose the connection and reconnect then subscription will be renewed
     client.subscribe("Motor/#") #Subscribes to the Voltage, Current, Temp, Resistance and Vibration Messages
     client.subscribe("PLC/#")
+    
 
 def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
+    print(msg.topic+" "+str(msg.payload)+" "+str(msg.retain))
 
 
     if msg.topic == "PLC/ctrlvoltage":
         global vCtrl
         vCtrl = int(msg.payload)
         client.publish("Motor/ctrlvoltage", vCtrl)
-        Functions.motorEncoder(vCtrl)
-        client.publish("Motor/rmsCurrent", Functions.current(freq, load, vCtrl))
-        client.publish("Motorl/vibration", Functions.vibration(load, vCtrl))
+        global freq
+        freq = Functions.motorEncoder(vCtrl, load)
+#        client.publish("Motor/rmsCurrent", Functions.current(freq, load, vCtrl))
+#        client.publish("Motorl/vibration", Functions.vibration(load, vCtrl))
+#        client.publish("Motor/temperature", Functions.temperature(Irms))
 
     if msg.topic == "PLC/load": #When the resistnace value changes, the new resistance is published to the functions
         global load
         load = int(msg.payload)
         client.publish("Motor/load", load)
-        client.publish("Motor/rmsCurrent", Functions.current(freq, load, vCtrl))
-        client.publish("Motor/vibration", Functions.vibration(load, vCtrl))
-        client.publish("Motor/temperature", Functions.temperature(Irms))
+        global freq
+        freq = Functions.motorEncoder(vCtrl, load)
+#        client.publish("Motor/rmsCurrent", Functions.current(freq, load, vCtrl))
+#        client.publish("Motor/vibration", Functions.vibration(load, vCtrl))
+#        client.publish("Motor/temperature", Functions.temperature(Irms))
 
 #    if msg.topic == "Motor/rmsCurrent":
 #        client.publish("Motor/temperature", Functions.temperature(Irms))
@@ -60,6 +65,10 @@ if __name__ == "__main__":
     client.connect(hostip, 1883, 60)
     try:
         while True:
+            while freq == 0:
+                client.loop()
+                if freq != 0:
+                    break
             #Making the functions output to varialbes
             Irms = Functions.current(freq, load, vCtrl)
             Vibration = Functions.vibration(load, vCtrl)
@@ -69,9 +78,10 @@ if __name__ == "__main__":
             client.publish("Motor/rmsCurrent", Irms)
             client.publish("Motor/vibration", Vibration)
             client.publish("Motor/temperature", Temperature)
+            print(vCtrl, load)
 
-            client.loop()
-            Functions.time.sleep(0.5)
+            client.loop(0.1)
+            Functions.time.sleep(1)
 
     except KeyboardInterrupt:
         client.disconnect()
