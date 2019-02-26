@@ -1,7 +1,6 @@
 #Functions for the python application
 from math import *
 from random import randint
-import paho.mqtt.publish as publish
 import RPi.GPIO as GPIO
 import time
 from datetime import datetime
@@ -9,9 +8,9 @@ import numpy
 
 
 
-def inputVoltage(): #This determines if the Rpi is receiving an input from the PLC
-    Vin = GPIO.input(11)
-    if Vin == 1:
+def inputVoltage(vCtrl): #This determines if the Rpi is receiving an input from the PLC
+#    Vin = GPIO.input(11)
+    if vCtrl != 0:
         status = "On"
     else:
         status = "Off"
@@ -19,16 +18,16 @@ def inputVoltage(): #This determines if the Rpi is receiving an input from the P
 
 
 def current(freq, load, vCtrl): #input the frequency, load and vCtrl from outside sources
-    loadConst = 4
-    Iweight = 3
+    loadweight = 3
     d = datetime.now()
     uSec = d.microsecond
     mSec = uSec / 1000.0
+    I0 = (vCtrl*4) + (loadweight*load)
     global Irms
 #    I1 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec))
 #    I2 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(2/3))
 #    I3 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(4/3))
-    Irms = ((vCtrl*loadConst) + (Iweight*load))/(sqrt(2))
+    Irms = I0/(sqrt(2))
     return Irms
 
 

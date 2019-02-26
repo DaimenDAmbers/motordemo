@@ -2,6 +2,8 @@
 import paho.mqtt.client as mqtt
 import Functions
 import RPi.GPIO as GPIO
+import myOPCUA
+import paho.mqtt.publish as publish
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -49,32 +51,23 @@ if __name__ == "__main__": #Script for frunning the main application
     vCtrl = 0 #Still need to be globalized but vCtrl is retained from the dashboard
     load = 0
     freq = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
-    status = Functions.inputVoltage()
-    counter = 0 #Counter for checking if the PLC is connected to the Pi
+    status = Functions.inputVoltage(vCtrl)
+
+    #Create an OPCUA server
+    myOPCUA.createOPCUA()
 
     #Create an MQTT client and attach our routines to it
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
     client.on_disconnect = on_disconnect
+    
 
     client.connect(hostip, 1883, 60)
+    client.loop_start()
+
     try:
         while True:
-#            while status == "Off": #Determines if the PLC is on or not
-#                counter += 1
-#                if counter == 1:
-#                    print("Please connect PLC")
-#                    client.publish("Motor/status", status)
-#                if status == "On":
-#                    client.publish("Motor/status", status)
-#                    break
-                
-            while freq == 0: #Determines if the freq is equal to 0
-                client.loop()
-                if freq != 0:
-                    break
-                
             #Making the functions output to varialbes
             Irms = Functions.current(freq, load, vCtrl)
             Vibration = Functions.vibration(load, vCtrl)
@@ -84,14 +77,10 @@ if __name__ == "__main__": #Script for frunning the main application
             client.publish("Motor/rmsCurrent", Irms)
             client.publish("Motor/vibration", Vibration)
             client.publish("Motor/temperature", Temperature)
-            print(vCtrl, load)
-
-            client.loop(5)
-            Functions.time.sleep(1)
             
-#            if status == "Off": #If the PLC is disconnected, turn off the program
-#                print("PLC disconnected, turning off program...")
-#                break
+            #OPCUA publish
+            
+            Functions.time.sleep(0.5)
 
     except KeyboardInterrupt:
         print("Ctrl+C Exiting program")
