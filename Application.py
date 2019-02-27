@@ -45,8 +45,9 @@ def on_disconnect(client, userdata, flags, rc=0): #Runs this when Ctrl+C is ente
 
 if __name__ == "__main__": #Script for frunning the main application
     hostip = "10.148.6.70"
-    #Board/Port Setup
+    #Board/Port Setup (Currently not being used)
     GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(11, GPIO.IN) #GPIO17 Used as the input of the vCtrl
     GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation / Motor Encoder
 
     #Initalize a constants
@@ -70,7 +71,7 @@ if __name__ == "__main__": #Script for frunning the main application
     try:
         while True:
             #Making the functions output to varialbes
-#            freq, rpm = Functions.motorEncoder(vCtrl, load)
+            freq, rpm = Functions.motorEncoder(vCtrl, load)
             Irms = Functions.current(freq, load, vCtrl)
             Vibration = Functions.vibration(load, vCtrl)
             Temperature = Functions.temperature(Irms)

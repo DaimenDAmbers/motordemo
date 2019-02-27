@@ -18,14 +18,18 @@ def current(freq, load, vCtrl): #input the frequency, load and vCtrl from outsid
     I2 = (I0)*sin(2*pi*freq*mSec) + pi*(2/3)  #Three-phase current
     I3 = (I0)*sin(2*pi*freq*mSec) + pi*(4/3)
     Irms = I0/(sqrt(2))
+    if vCtrl == 0:
+        Irms = 0
     return Irms
 
 def temperature(Irms): #Temperature in relation to Irms
     temp = 20 + ((Irms**3)*0.002)
     return temp
 
-def vibration(load, vCtrl): #Vibration in relation to load and vCtrl
-    vibr = numpy.random.uniform(-0.5,2.5) * (0.1*(load + vCtrl)+1) #Should be a float
+def vibration(load, vCtrl): #Vibration in relation to load and vCtrl        
+    vibr = numpy.random.uniform(-0.5,((0.1*(load + vCtrl))+1))
+    if vCtrl == 0:
+        vibr = 1
     return vibr
 
 def motorEncoder(vCtrl, load): #Function for developing the frequency and the rpms
@@ -35,8 +39,10 @@ def motorEncoder(vCtrl, load): #Function for developing the frequency and the rp
         rpm = 0
     else:
         freq = (8 * vCtrl)-(1.5*load)
-        p12 = GPIO.PWM(12, freq) #Blink LED on GPIO 18, pin 12 with f=40Hz
-        p12.start(50) #50% duty cycle
+        if freq < 0:
+            freq = 0
+#        p12 = GPIO.PWM(12, freq) #Blink LED on GPIO 18, pin 12 with f=40Hz Not used for this demo
+#        p12.start(50) #50% duty cycle
         rpm = (freq*60)/10
     return [freq, rpm]
 
