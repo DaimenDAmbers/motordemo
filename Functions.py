@@ -14,9 +14,9 @@ def current(freq, load, vCtrl): #input the frequency, load and vCtrl from outsid
     mSec = uSec / 1000.0        #Timestemp milliseconds
     I0 = (vCtrl*4) + (loadweight*load)
     global Irms
-    I1 = (I0)*sin(2*pi*freq*mSec))
-    I2 = (I0)*sin(2*pi*freq*mSec) + pi*(2/3))   #Three-phase current
-    I3 = (I0)*sin(2*pi*freq*mSec) + pi*(4/3))
+    I1 = (I0)*sin(2*pi*freq*mSec)
+    I2 = (I0)*sin(2*pi*freq*mSec) + pi*(2/3)  #Three-phase current
+    I3 = (I0)*sin(2*pi*freq*mSec) + pi*(4/3)
     Irms = I0/(sqrt(2))
     return Irms
 
@@ -43,7 +43,7 @@ def motorEncoder(vCtrl, load): #Function for developing the frequency and the rp
 if __name__ == "__main__":
 
     #Get ip address
-    hostip = "192.168.137.34"
+    hostip = "10.148.6.70"
 
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)

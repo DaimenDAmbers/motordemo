@@ -19,17 +19,17 @@ def on_message(client, userdata, msg):
 
     if msg.topic == "PLC/ctrlvoltage": #When the control voltage value changes, the new voltage is published to the functions
         global vCtrl
-        # global freq         #Make these global because they are used elsewhere in the code
-        # global rpm
+        global freq         #Make these global because they are used elsewhere in the code
+        global RatePerMin
         vCtrl = int(msg.payload)
-        # freq, rpm = Functions.motorEncoder(vCtrl, load) #Not sure if this is necessary here if it is down in the while loop
+        freq, RatePerMin = Functions.motorEncoder(vCtrl, load) #Not sure if this is necessary here if it is down in the while loop
 
     if msg.topic == "PLC/load": #When the load value changes, the new load is updated globally
         global load
-        # global freq
-        # global rpm
+        global freq
+        global RatePerMin
         load = int(msg.payload)
-        # freq, rpm = Functions.motorEncoder(vCtrl, load)
+        freq, RatePerMin = Functions.motorEncoder(vCtrl, load)
 
     if msg.topic == "PLC/status":
         client.pulish("Motor/status", status)
@@ -40,11 +40,11 @@ def on_disconnect(client, userdata, flags, rc=0): #Runs this when Ctrl+C is ente
     client.loop_stop()
     myOPCUA.disconnectOPCUA()
     GPIO.cleanup()
-    print("Shutting successful")
+    print("Shutdown successful")
 
 
 if __name__ == "__main__": #Script for frunning the main application
-    hostip = "192.168.137.34"
+    hostip = "10.148.6.70"
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation / Motor Encoder
@@ -52,10 +52,10 @@ if __name__ == "__main__": #Script for frunning the main application
     #Initalize a constants
     vCtrl = 0 #Still need to be globalized but vCtrl and load is retained from the dashboard
     load = 0
-    freq, rpm = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
+    freq, RatePerMin = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
 
     #Create an OPCUA server
-    Temp, Vibr, Curr, Rms = myOPCUA.createOPCUA()
+    Temp, Vibr, Curr, Rpm = myOPCUA.createOPCUA()
 
     #Create an MQTT client and attach our routines to it
     client = mqtt.Client()
@@ -70,7 +70,7 @@ if __name__ == "__main__": #Script for frunning the main application
     try:
         while True:
             #Making the functions output to varialbes
-            freq, rpm = Functions.motorEncoder(vCtrl, load)
+#            freq, rpm = Functions.motorEncoder(vCtrl, load)
             Irms = Functions.current(freq, load, vCtrl)
             Vibration = Functions.vibration(load, vCtrl)
             Temperature = Functions.temperature(Irms)
@@ -79,10 +79,10 @@ if __name__ == "__main__": #Script for frunning the main application
             client.publish("Motor/rmsCurrent", Irms)
             client.publish("Motor/vibration", Vibration)
             client.publish("Motor/temperature", Temperature)
-            client.publish("Motor/rpms", rpm)
+            client.publish("Motor/rpms", RatePerMin)
 
             #OPCUA publish
-            myOPCUA.publishOPCUA(load, vCtrl, freq, Irms, Temp, Vibr, Curr)
+            myOPCUA.publishOPCUA(Irms, Vibration, Temperature, RatePerMin, Temp, Vibr, Curr, Rpm)
             time.sleep(0.5)
 
     except KeyboardInterrupt:
