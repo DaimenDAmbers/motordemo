@@ -40,7 +40,7 @@ def on_disconnect(client, userdata, flags, rc=0): #Runs this when Ctrl+C is ente
     client.loop_stop()
     myOPCUA.disconnectOPCUA()
     GPIO.cleanup()
-    print("Shutting down servers...")
+    print("Shutting successful")
 
 
 if __name__ == "__main__": #Script for frunning the main application
@@ -50,12 +50,12 @@ if __name__ == "__main__": #Script for frunning the main application
     GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation / Motor Encoder
 
     #Initalize a constants
-    vCtrl = 0 #Still need to be globalized but vCtrl is retained from the dashboard
+    vCtrl = 0 #Still need to be globalized but vCtrl and load is retained from the dashboard
     load = 0
     freq, rpm = Functions.motorEncoder(vCtrl, load) #Takes the input of vCtrl and load
 
     #Create an OPCUA server
-    Temp, Vibr, Curr = myOPCUA.createOPCUA()
+    Temp, Vibr, Curr, Rms = myOPCUA.createOPCUA()
 
     #Create an MQTT client and attach our routines to it
     client = mqtt.Client()
