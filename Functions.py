@@ -7,40 +7,28 @@ from datetime import datetime
 import numpy
 import paho.mqtt.publish as publish
 
-
-
-def inputVoltage(vCtrl): #This determines if the Rpi is receiving an input from the PLC
-#    Vin = GPIO.input(11)
-    if vCtrl != 0:
-        status = "On"
-    else:
-        status = "Off"
-    return status
-
-
 def current(freq, load, vCtrl): #input the frequency, load and vCtrl from outside sources
     loadweight = 3
     d = datetime.now()
     uSec = d.microsecond
-    mSec = uSec / 1000.0
+    mSec = uSec / 1000.0        #Timestemp milliseconds
     I0 = (vCtrl*4) + (loadweight*load)
     global Irms
-#    I1 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec))
-#    I2 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(2/3))
-#    I3 = ((vCtrl/(loadConst*load))*sin(2*pi*freq*mSec) + pi*(4/3))
+    I1 = (I0)*sin(2*pi*freq*mSec))
+    I2 = (I0)*sin(2*pi*freq*mSec) + pi*(2/3))   #Three-phase current
+    I3 = (I0)*sin(2*pi*freq*mSec) + pi*(4/3))
     Irms = I0/(sqrt(2))
     return Irms
 
-
-def temperature(Irms): #constant temperature
+def temperature(Irms): #Temperature in relation to Irms
     temp = 20 + ((Irms**3)*0.002)
     return temp
 
-def vibration(load, vCtrl): #constant vibration
+def vibration(load, vCtrl): #Vibration in relation to load and vCtrl
     vibr = numpy.random.uniform(-0.5,2.5) * (0.1*(load + vCtrl)+1) #Should be a float
     return vibr
 
-def motorEncoder(vCtrl, load):
+def motorEncoder(vCtrl, load): #Function for developing the frequency and the rpms
     global p12
     if vCtrl == 0:
         freq = 0
@@ -52,7 +40,6 @@ def motorEncoder(vCtrl, load):
         rpm = (freq*60)/10
     return [freq, rpm]
 
-
 if __name__ == "__main__":
 
     #Get ip address
@@ -60,7 +47,6 @@ if __name__ == "__main__":
 
     #Board/Port Setup
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(11, GPIO.IN) #GPIO17 Receiving the 5 Vc from the PLC
     GPIO.setup(12, GPIO.OUT) #GPIO18 Pulse Width Modulation
 
     #    #Defining Global Constants and Variables
